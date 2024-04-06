@@ -6,25 +6,20 @@ namespace Functional.Optional;
 /// Using Optional is a good way to deal with errors or exceptional cases without resorting to drastic measures such as error.
 /// </summary>
 /// <typeparam name="T">A parametric type of the value</typeparam>
-/// <param name="value">The contained value of the Optional</param>
 public abstract class Optional<T>(T value)
 {
     protected T value = value;
     protected bool isHasValue;
 
-    public bool IsHasValue
-    {
-        get { return this.isHasValue; }
-    }
+    public bool IsHasValue => isHasValue;
+
+
     /// <summary>
     /// Takes a value and produces an Optional Type
     /// </summary>
     /// <param name="value"></param>
     /// <returns>An Optional Type containing the passed value</returns>
-    public static Optional<T> Unit(T value)
-    {
-        return new Some<T>(value);
-    }
+    public static Optional<T> Unit(T value) => new Some<T>(value);
     /// <summary>
     /// Uses for function sequential composition
     /// </summary>

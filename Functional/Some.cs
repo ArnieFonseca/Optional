@@ -10,7 +10,7 @@ public class Some<T> : Optional<T>
     /// Constructor for the Some Type
     /// </summary>
     /// <param name="value">The internal value of the Optional Type</param>
-    public Some(T value) : base(value) { this.isHasValue = true; }
+    public Some(T value) : base(value) => isHasValue = true;
 
     public override Optional<U> Bind<U>(Func<T, Optional<U>> fn)
     {
