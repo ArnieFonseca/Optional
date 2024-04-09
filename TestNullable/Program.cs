@@ -2,62 +2,77 @@
 
 namespace TestNullable;
 
+using Functional.Either;
 using Functional.Optional;
+
 using Model;
 
-public class Program
+public partial class Program
 {
     static void Main()
     {
-        var names = new List<string>() { "Joe", "Paul", "Mary", "Joanne", "John" };
-        foreach (string name in names)
-        {
-            Optional<Developer> developer = Optional<string>.Unit(name)
-                                            .Bind(GetDeveloper);
+        List<string> names = ["Joe", "Paul", "Mary", "Joanne", "John"];
 
-            string devName = developer.Match(x => x.Name, _ => "Developer Not Exists");
-            string devlang = developer.Bind(GetSkill)
-                                   .Bind(GetLanguage)
-                                   .Match(x => x.Name, _ => "No Skill")                                
-                                   ;
+        OptionalUtil.Developers = LoadData();
+        names.ForEach(name => UseOptional(name));
 
-            Console.WriteLine($"{devName} - {devlang}");
+        Console.WriteLine();
 
-        }
+        EitherUtil.Developers = LoadData();
+        names.ForEach(name => UseEither(name));
+            
     }
-    /// <summary>
-    /// Retrieve a Developer or Nothing
-    /// </summary>
-    /// <param name="name">The name of the developer</param>
-    /// <returns>An Optional Developer</returns>
-    static Optional<Developer> GetDeveloper(string name)
+
+    private static void UseOptional(string name)
     {
-        Developer? dev = LoadData().FirstOrDefault(x => x.Name == name);
-        return (dev != null) ? new Some<Developer>(dev) :  new None<Developer>();  
+        Optional<Developer> developer = Optional<string>.Unit(name)
+                                                        .Bind(OptionalUtil.GetDeveloper)
+                                                        ;
+
+        string devName = (developer.IsHasValue)
+                            ? name
+                            : $"{name} (Developer Not Exists)"
+                            ;
+
+        string devlang = (developer.IsHasValue)
+                            ? developer.Bind(OptionalUtil.GetSkill)
+                                       .Bind(OptionalUtil.GetLanguage)
+                                       .Match(x => x.Name, _ => "(No Skill)")
+                            : string.Empty
+
+                            ;
+
+        Console.WriteLine($"Optional: {devName} {devlang}");
     }
-    /// <summary>
-    /// Retrieve the Developer Skill or Nothing
-    /// </summary>
-    /// <param name="developer">The developer type uses to get its skill</param>
-    /// <returns>An Optional of Skill</returns>
-    static Optional<Skill> GetSkill(Developer developer) => (developer.Skill != null)
-            ? new Some<Skill>(developer.Skill)
-            : new None<Skill>();
-    /// <summary>
-    /// Retrieve the Developer Skill Language or Nothing
-    /// </summary>
-    /// <param name="skill">Type of Skill</param>
-    /// <returns>An Optional Language</returns>
-    static Optional<Language> GetLanguage(Skill skill) => (skill.Language) != null
-            ? new Some<Language>(skill.Language)
-            : new None<Language>();
+
+    private static void UseEither(string name)
+    {
+        Either<Exception, Developer> developer = Either<Exception, string>.Unit(name)
+                                                                          .Bind(EitherUtil.GetDeveloper)
+                                                                          ;
+
+        string devName = (developer.IsRight)
+                            ? name
+                            : $"{name} {developer.Match(r => r.Name, l => l.Message)}"
+                            ;
+
+        string devlang = (developer.IsRight)
+                            ? developer.Bind(EitherUtil.GetSkill)
+                                       .Bind(EitherUtil.GetLanguage)
+                                       .Match(r => r.Name, l => l.Message)
+                            : string.Empty
+                            ;
+
+        Console.WriteLine($"Either: {devName} {devlang}");
+    }
+
     /// <summary>
     /// Data Loader
     /// </summary>
     /// <returns>List of Developers</returns>
-    static List<Developer> LoadData() => new()
+    public static List<Developer> LoadData() => new()
         {
-            new() {Name = "John"},
+            new() {Name="John"}, 
             new() {Name="Mary", Skill=  new Skill() { Language = new Language() {Name = "C#"}} },
             new() {Name="Joanne", Skill=  new Skill() { Language = new Language() {Name = "SQL Server"}} },
             new() {Name="Paul", Skill=  new Skill() { Language = new Language() {Name = "Python"}} },
